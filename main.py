@@ -119,8 +119,6 @@ def handle_start_help(message):
                                           "/DefinedMonthExpenseByCategory\n retrieves expenses for defined month for "
                                           "every "
                                           "category\n"
-                                          "/FormatDefinedFile or /FDF\n restores correct formating for whole document"
-                                          " defined by date, takes up to 5 minutes, do not use frequently\n"
                                           "/ShowCategories or /SC shows existing categories in current month \n"
                                           "/ShowExpenses or /SE show expenses in defined category of current month\n"
 
@@ -141,9 +139,112 @@ def create_spreadsheet(message):
             bot.send_message(message.chat.id, "Sheet for current month is already exists")
         except gspread.SpreadsheetNotFound:
             sh=gc.create(date_time.today().strftime("%Y.%m"))
-            sh.share(EMAIL, perm_type='user', role='owner')
+            sh.share(EMAIL, perm_type='user', role='writer')
             bot.send_message(message.chat.id, date_time.today().strftime("%Y.%m") +
-                             " spreadsheet was successfully created")
+                             "spreadsheet was successfully created and shared to you.\n"
+                             "Wait a bit. Formatting in progress")
+            worksheet=sh.get_worksheet(0)
+            worksheet.format("A1:B1000", {
+                "backgroundColor": {
+                    "red": 0.98,
+                    "green": 0.74,
+                    "blue": 0.16
+                },
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "foregroundColor": {
+                        "red": 0.0,
+                        "green": 0.0,
+                        "blue": 0.0
+                    },
+                    "fontSize": 10,
+                    "bold": False
+                }
+            })
+            worksheet.format("C1:D1000", {
+                "backgroundColor": {
+                    "red": .20,
+                    "green": 0.66,
+                    "blue": 0.33,
+                },
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "foregroundColor": {
+                        "red": 0.0,
+                        "green": 0.0,
+                        "blue": 0.0
+                    },
+                    "fontSize": 10,
+                    "bold": False
+                }
+            })
+            worksheet.format("A1:Z1", {
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "bold": True
+                }
+            })
+            worksheet.format("U1:V1", {
+                "backgroundColor": {
+                    "red": 1,
+                    "green": 0.43,
+                    "blue": 0.,
+                },
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "foregroundColor": {
+                        "red": 0.0,
+                        "green": 0.0,
+                        "blue": 0.0
+                    },
+                    "fontSize": 10,
+                    "bold": True
+                }
+            })
+            worksheet.format("W1:X1", {
+                "backgroundColor": {
+                    "red": 0.26,
+                    "green": 0.52,
+                    "blue": 0.96
+                },
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "foregroundColor": {
+                        "red": 0,
+                        "green": 0,
+                        "blue": 0
+                    },
+                    "fontSize": 10,
+                    "bold": True
+                }
+            })
+            worksheet.format("Y1:Z1", {
+                "backgroundColor": {
+                    "red": 1,
+                    "green": 0.52,
+                    "blue": 1,
+                },
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "foregroundColor": {
+                        "red": 0,
+                        "green": 0,
+                        "blue": 0
+                    },
+                    "fontSize": 10,
+                    "bold": True
+                }
+            })
+            worksheet.update('A1', 'Food')
+            worksheet.update('B1', '=СУММ(B2:B1000)', raw=False)
+            worksheet.update('C1', 'Others')
+            worksheet.update('D1', '=СУММ(D2:D1000)', raw=False)
+            worksheet.update('U1', 'Expenses')
+            worksheet.update('V1', '=СУММ(B1;D1)', raw=False)
+            worksheet.update('W1', 'Income')
+            worksheet.update('Y1', 'Balance')
+            worksheet.update('Z1', '=СУММ(-V1;X1)', raw=False)
+            bot.send_message(message.chat.id, " All done! ")
     else:
         bot.send_message(message.chat.id, "Access denied!!!\nPlease ensure you have right to use this bot!")
 
