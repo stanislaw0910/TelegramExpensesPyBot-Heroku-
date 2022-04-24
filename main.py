@@ -510,7 +510,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://salty-woodland-68506.herokuapp.com/' + TOKEN)
+    bot.set_webhook(url='https://telegram-expenses-pybot-heroku.herokuapp.com/' + TOKEN)
     return "!", 200
 
 
