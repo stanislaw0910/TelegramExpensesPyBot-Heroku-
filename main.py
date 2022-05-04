@@ -141,7 +141,7 @@ def create_spreadsheet(message):
             sh=gc.create(date_time.today().strftime("%Y.%m"))
             sh.share(EMAIL, perm_type='user', role='writer')
             bot.send_message(message.chat.id, date_time.today().strftime("%Y.%m") +
-                             "spreadsheet was successfully created and shared to you.\n"
+                             " spreadsheet was successfully created and shared to you.\n"
                              "Wait a bit. Formatting in progress")
             worksheet=sh.get_worksheet(0)
             worksheet.format("A1:B1000", {
@@ -253,11 +253,16 @@ def create_spreadsheet(message):
 @bot.message_handler(commands=['ShowCategories', 'SC'])
 def show_categories(message):
     if message.from_user.id == OWNER_ID:
-        sh = gc.open(date_time.today().strftime("%Y.%m"))
-        worksheet = sh.get_worksheet(0)
-        expenses_list = worksheet.row_values(1)[:-6:2]  # make list with no total values such as balance, income, total
-        expenses_list = [x for x in expenses_list if x]  # getting rid of empty cells
-        bot.send_message(message.chat.id, "\n".join([s for s in expenses_list]))
+        try:
+            sh = gc.open(date_time.today().strftime("%Y.%m"))
+            worksheet = sh.get_worksheet(0)
+            expenses_list = worksheet.row_values(1)[:-6:2]  # make list with no total values such as balance, income, total
+            expenses_list = [x for x in expenses_list if x]  # getting rid of empty cells
+            bot.send_message(message.chat.id, "\n".join([s for s in expenses_list]))
+        except gspread.SpreadsheetNotFound as fe:
+            bot.send_message(message.chat.id, 'There is no spreadsheet for current month.\n'
+                                              '(Use /CS to create spreadsheet)')
+            logging.error(str(fe))
     else:
         bot.send_message(message.chat.id, "Access denied!!!\nPlease ensure you have right to use this bot!")
 
@@ -266,13 +271,12 @@ def show_categories(message):
 @bot.message_handler(commands=['ShowExpenses', 'SE'])
 def show_expenses(message):
     """
-    This function is 1/2 step process of showing current month's expenses
+    This function shows current month's expenses
     By every category
     Executes with command /ShowExpenses or /SE
     """
     if message.from_user.id == OWNER_ID:
         error_column = 0
-        smile = u"\uE056"
         try:
             sh=gc.open(date_time.today().strftime("%Y.%m"))
             worksheet=sh.get_worksheet(0)
@@ -280,7 +284,7 @@ def show_expenses(message):
                 exp_cell = worksheet.cell(1, i)
                 price_cell = worksheet.cell(1, i+1)
                 error_column = i
-                if exp_cell.value:
+                if exp_cell.value and price_cell:
                     expenses_list=worksheet.col_values(exp_cell.col)[1:]
                     values_list=worksheet.col_values(exp_cell.col + 1)[1:]
                     exps_vals_list=list(zip(expenses_list, values_list))
@@ -289,7 +293,7 @@ def show_expenses(message):
                     bot.send_message(message.chat.id, "\n".join([s for s in exps_vals_list]))
                 else:
                     bot.send_message(message.chat.id, exp_cell.value + ' -- ' + '0')
-            bot.send_message(message.chat.id, "That's All Folks!"+smile)
+            bot.send_message(message.chat.id, "That's All Folks!")
         except TypeError as te:
             bot.send_message(message.chat.id, "You have expense with no price or vice versa\n"
                                               "Make some changes with " + str(error_column) +
@@ -297,6 +301,10 @@ def show_expenses(message):
                                               "th column\n And you will not see this message again")
             logging.error(str(te))
             return
+        except gspread.SpreadsheetNotFound as fe:
+            bot.send_message(message.chat.id, 'There is no spreadsheet for current month.\n'
+                                              '(Use /CS to create spreadsheet)')
+            logging.error(str(fe))
         except Exception as e:
             if message.text.lower() in ['exit', 'start', 'help']:
                 bot.send_message(message.chat.id, 'Exit initiated!!!\n You can start from beginning with '
@@ -319,11 +327,15 @@ def current_month_balance(message):
     executes with command /CurrentMonthBalance
     """
     if message.from_user.id == OWNER_ID:
-        sh = gc.open(date_time.today().strftime("%Y.%m"))
-        worksheet = sh.get_worksheet(0)
-        bot.send_message(message.chat.id, "Current month income is: " + worksheet.acell('X1').value)
-        bot.send_message(message.chat.id, "Current month expenses are: " + worksheet.acell('V1').value)
-        bot.send_message(message.chat.id, "Current month balance is: " + worksheet.acell('Z1').value)
+        try:
+            sh = gc.open(date_time.today().strftime("%Y.%m"))
+            worksheet = sh.get_worksheet(0)
+            bot.send_message(message.chat.id, "Current month income is: " + worksheet.acell('X1').value)
+            bot.send_message(message.chat.id, "Current month expenses are: " + worksheet.acell('V1').value)
+            bot.send_message(message.chat.id, "Current month balance is: " + worksheet.acell('Z1').value)
+        except gspread.SpreadsheetNotFound:
+            bot.send_message(message.chat.id, 'There is no spreadsheet for current month.\n'
+                                              '(Use /CS to create spreadsheet)')
     else:
         bot.send_message(message.chat.id, "Access denied!!!\nPlease ensure you have right to use this bot!")
 
