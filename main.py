@@ -287,6 +287,8 @@ def show_expenses(message):
                     exps_vals_list=list(map(' -- '.join, exps_vals_list))
                     bot.send_message(message.chat.id, exp_cell.value + ' -- ' + price_cell.value)
                     bot.send_message(message.chat.id, "\n".join([s for s in exps_vals_list]))
+                else:
+                    bot.send_message(message.chat.id, exp_cell.value + ' -- ' + '0')
             bot.send_message(message.chat.id, "That's All Folks!"+smile)
         except TypeError as te:
             bot.send_message(message.chat.id, "You have expense with no price or vice versa\n"
